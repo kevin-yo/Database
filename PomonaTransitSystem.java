@@ -298,8 +298,35 @@ public class PomonaTransitSystem {
 		}
 	}
 	
-public static void recordActualTripData(Statement stmt) throws SQLException {
+	public static void recordActualTripData(Statement stmt) throws SQLException {
+		Scanner input = new Scanner(System.in);
+		System.out.print("Enter TripNumber: ");
+		String tripNumber = input.nextLine();
 		
+		ResultSet rs = stmt.executeQuery("SELECT T.TripNumber, TSI.StopNumber, T.Date, T.ScheduledStartTime, T.ScheduledArrivalTime "
+										+ "FROM Trip T, TripStopInfo TSI "
+										+ "WHERE T.TripNumber = " + tripNumber + " AND "
+										+ "T.TripNumber = TSI.TripNumber;");
+
+		String stopNumber = rs.getString(2);
+		String date = rs.getString(3);
+		String scheduledStartTime = rs.getString(4);
+		String scheduledArrivalTime = rs.getString(5);
+		
+		System.out.print("ScheduledStartTime: " + scheduledStartTime
+						+ "\nEnter ActualStartTime: ");
+		String actualStartTime = input.nextLine();
+		System.out.print("ScheduledArrivalTime: " + scheduledArrivalTime 
+						+ "\nEnter ActualArrivalTime: ");
+		String actualArrivalTime = input.nextLine();
+		System.out.print("Enter NumberOfPassengerIn: ");
+		String numOfPassIN = input.nextLine();
+		System.out.print("Enter TNumberOfPassengerOut: ");
+		String numOfPassOUT = input.nextLine();
+		
+		stmt.execute("INSERT INTO ActualTripInfo VALUES " 
+				+ "(\'" + tripNumber + "\', \'" + date + "\', \'" + scheduledStartTime + "\', \'" + stopNumber + "\', \'" + scheduledArrivalTime 
+				+ "\', \'" + actualStartTime + "\', \'" + actualArrivalTime + "\', \'" + numOfPassIN + "\', \'" + numOfPassOUT + "\')");
 	}
 	
 	public static void fillTables(Statement stmt) throws SQLException {
