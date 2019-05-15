@@ -1,5 +1,6 @@
 import java.sql.Connection;
 import java.sql.DriverManager;
+import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.sql.Statement;
 import java.util.Scanner;
@@ -92,19 +93,90 @@ public class PomonaTransitSystem {
 	}
 	
 	public static void deleteTripOffering(Statement stmt) throws SQLException {
+		Scanner input = new Scanner(System.in);
+		System.out.print("Enter Trip#: ");
+		String tripNumber = input.nextLine();
+		System.out.print("Enter Date: ");
+		String date = input.nextLine();
+		System.out.print("Enter ScheduledStartTime: ");
+		String startTime = input.nextLine();
 		
+		int completed = stmt.executeUpdate("DELETE FROM TripOffering WHERE TripNumber = " + tripNumber + 
+				" AND Date = " + date + " AND ScheduledStartTime = " + 
+				startTime + "");
+		if(completed == 1) {
+			System.out.println("Record removed from table.\n");
+		}
+		else {
+			System.out.println("Your entry did not match a row.\n");
+		}
 	}
 	
 	public static void addTripOffering(Statement stmt) throws SQLException {
+		Scanner input = new Scanner(System.in);
+		System.out.print("Enter Trip#: ");
+		String tripNumber = input.nextLine();
+		System.out.print("Enter Date: ");
+		String date = input.nextLine();
+		System.out.print("Enter ScheduledStartTime: ");
+		String startTime = input.nextLine();
+		System.out.print("Enter ScheduledArrivalTime: ");
+		String arrivalTime = input.nextLine();
+		System.out.print("Enter Driver Name: ");
+		String driverName = input.nextLine();
+		System.out.print("Enter Bus ID: ");
+		String busID = input.nextLine();
 		
+		stmt.execute("INSERT INTO TripOffering VALUES "
+				+ "(\'" + tripNumber + "\', \'" + date + "\', \'" + startTime +
+				"\', \'" + arrivalTime + "\', \'" + driverName + "\', \'" + busID
+				+ "\')");
 	}
 	
 	public static void changeDriver(Statement stmt) throws SQLException {
+		Scanner input = new Scanner(System.in);
+		System.out.print("Enter Trip#: ");
+		String tripNumber = input.nextLine();
+		System.out.print("Enter Date: ");
+		String date = input.nextLine();
+		System.out.print("Enter ScheduledStartTime: ");
+		String startTime = input.nextLine();
+		System.out.print("Enter New Driver Name: ");
+		String driverName = input.nextLine();
 		
+		int completed = stmt.executeUpdate("UPDATE TripOffering "
+				+ "SET DriverName = \'" + driverName + "\' WHERE TripNumber = " 
+				+ tripNumber + " AND Date = " + date + " AND ScheduledStartTime = "
+				+ startTime);
+		if(completed == 1) {
+			System.out.println("Successfully updated name.\n");
+		}
+		else {
+			System.out.println("Trip does not exist.\n");
+		}
 	}
 	
 	public static void changeBus(Statement stmt) throws SQLException {
+		Scanner input = new Scanner(System.in);
+		System.out.print("Enter Trip#: ");
+		String tripNumber = input.nextLine();
+		System.out.print("Enter Date: ");
+		String date = input.nextLine();
+		System.out.print("Enter ScheduledStartTime: ");
+		String startTime = input.nextLine();
+		System.out.print("Enter New Bus ID: ");
+		String busID = input.nextLine();
 		
+		int completed = stmt.executeUpdate("UPDATE TripOffering "
+				+ "SET BusID = \'" + busID + "\' WHERE TripNumber = " 
+				+ tripNumber + " AND Date = " + date + " AND ScheduledStartTime = "
+				+ startTime);
+		if(completed == 1) {
+			System.out.println("Successfully updated bus.\n");
+		}
+		else {
+			System.out.println("Trip does not exist.\n");
+		}
 	}
 	
 	public static void displayStops(Statement stmt) throws SQLException {
@@ -148,9 +220,9 @@ public class PomonaTransitSystem {
 		
 		tableQuery = "CREATE TABLE TripOffering "
 				+ "( TripNumber CHAR(6) NOT NULL, "
-				+ "Date VARCHAR(50) NOT NULL, "
-				+ "ScheduledStartTime VARCHAR(50) NOT NULL, "
-				+ "ScheduledArrivalTime VARCHAR(50) NOT NULL, "
+				+ "Date INTEGER NOT NULL, "
+				+ "ScheduledStartTime INTEGER NOT NULL, "
+				+ "ScheduledArrivalTime INTEGER NOT NULL, "
 				+ "DriverName VARCHAR(50) NOT NULL, "
 				+ "BusID CHAR(6) NOT NULL, "
 				+ "PRIMARY KEY ( TripNumber, Date, ScheduledStartTime ) "
@@ -181,12 +253,12 @@ public class PomonaTransitSystem {
 		
 		tableQuery = "CREATE TABLE ActualTripStopInfo "
 				+ "(TripNumber CHAR(6) NOT NULL, "
-				+ "DATE VARCHAR(50) NOT NULL, "
-				+ "ScheduledStartTime VARCHAR(50) NOT NULL, "
+				+ "DATE INTEGER NOT NULL, "
+				+ "ScheduledStartTime INTEGER NOT NULL, "
 				+ "StopNumber CHAR(6) NOT NULL, "
-				+ "ScheduledArrivalTime VARCHAR(50) NOT NULL, "
-				+ "ActualStartTime VARCHAR(50) NOT NULL, "
-				+ "ActualArrivalTime VARCHAR(50) NOT NULL, "
+				+ "ScheduledArrivalTime INTEGER NOT NULL, "
+				+ "ActualStartTime INTEGER NOT NULL, "
+				+ "ActualArrivalTime INTEGER NOT NULL, "
 				+ "NumberOfPassengerIn INTEGER NOT NULL, "
 				+ "NumberOfPassengerOut INTEGER NOT NULL, "
 				+ "PRIMARY KEY ( TripNumber, Date, ScheduledStartTime, StopNumber ) "
