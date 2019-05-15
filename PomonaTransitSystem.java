@@ -248,7 +248,33 @@ public class PomonaTransitSystem {
 	}
 	
 	public static void displayWeeklySchedule(Statement stmt) throws SQLException {
+		Scanner input = new Scanner(System.in);
+		System.out.print("Enter DriverName: ");
+		String driverName = input.nextLine();
+		System.out.print("Enter Date: ");
+		String date = input.nextLine();
 		
+		ResultSet rs = stmt.executeQuery("SELECT TO.TripNumber, TO.Date, TO.ScheduledStartTime, TO.ScheduledArrivalTime, TO.BusID"
+						+ "FROM TripOffering TO, Driver D"
+						+ "WHERE D.DriverName = " + driverName + "AND "
+						+ "TO.DriverName = D.DriverName AND "
+						+ "(TO.Date - " + date + ") < 7;");
+		
+		ResultSetMetaData rsmd = rs.getMetaData();
+		int numOfCol = rsmd.getColumnCount();
+		
+		String format = "%40s";
+		for(int i = 1; i <= numOfCol; i++) {
+			System.out.printf(format, rsmd.getColumnName(i));
+		}
+		
+		while(rs.next()) {
+			for(int i = 1; i <= numOfCol; i++) {
+				System.out.printf(format, rs.getString(i));
+			}
+		}
+		
+		rs.close();
 	}
 	
 	public static void addDriver(Statement stmt) throws SQLException {
