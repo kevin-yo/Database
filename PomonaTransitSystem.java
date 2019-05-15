@@ -259,7 +259,7 @@ public class PomonaTransitSystem {
 						+ "FROM TripOffering, Driver "
 						+ "WHERE Driver.DriverName = '" + driverName + "' AND "
 						+ "TripOffering.DriverName = Driver.DriverName AND "
-						+ "(TripOffering.Date - #" + date + "#) < 7;");
+						+ "TripOffering.Date < DATEADD(DD, 7, @TripOffering.Date)");
 		
 		ResultSetMetaData rsmd = rs.getMetaData();
 		int numOfCol = rsmd.getColumnCount();
