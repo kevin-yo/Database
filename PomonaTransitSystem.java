@@ -17,6 +17,7 @@ public class PomonaTransitSystem {
 			Statement stmt = conn.createStatement();
 			
 //			createTables(stmt); // only run this on first run to create tables, comment out after
+			fillTables(stmt);
 			run(stmt);
 			
 			stmt.close();
@@ -102,7 +103,7 @@ public class PomonaTransitSystem {
 		String startTime = input.nextLine();
 		
 		int completed = stmt.executeUpdate("DELETE FROM TripOffering WHERE TripNumber = " + tripNumber + 
-				" AND Date = " + date + " AND ScheduledStartTime = " + 
+				" AND Date = #" + date + "# AND ScheduledStartTime = " + 
 				startTime + "");
 		if(completed == 1) {
 			System.out.println("Record removed from table.\n");
@@ -110,6 +111,7 @@ public class PomonaTransitSystem {
 		else {
 			System.out.println("Your entry did not match a row.\n");
 		}
+		input.close();
 	}
 	
 	public static void addTripOffering(Statement stmt) throws SQLException {
@@ -128,9 +130,10 @@ public class PomonaTransitSystem {
 		String busID = input.nextLine();
 		
 		stmt.execute("INSERT INTO TripOffering VALUES "
-				+ "(\'" + tripNumber + "\', \'" + date + "\', \'" + startTime +
-				"\', \'" + arrivalTime + "\', \'" + driverName + "\', \'" + busID
-				+ "\')");
+				+ "('" + tripNumber + "', #" + date + "#, '" + startTime +
+				"', '" + arrivalTime + "', '" + driverName + "', '" + busID
+				+ "')");
+		input.close();
 	}
 	
 	public static void changeDriver(Statement stmt) throws SQLException {
@@ -145,8 +148,8 @@ public class PomonaTransitSystem {
 		String driverName = input.nextLine();
 		
 		int completed = stmt.executeUpdate("UPDATE TripOffering "
-				+ "SET DriverName = \'" + driverName + "\' WHERE TripNumber = " 
-				+ tripNumber + " AND Date = " + date + " AND ScheduledStartTime = "
+				+ "SET DriverName = '" + driverName + "' WHERE TripNumber = " 
+				+ tripNumber + " AND Date = #" + date + "# AND ScheduledStartTime = "
 				+ startTime);
 		if(completed == 1) {
 			System.out.println("Successfully updated name.\n");
@@ -154,6 +157,7 @@ public class PomonaTransitSystem {
 		else {
 			System.out.println("Trip does not exist.\n");
 		}
+		input.close();
 	}
 	
 	public static void changeBus(Statement stmt) throws SQLException {
@@ -168,15 +172,17 @@ public class PomonaTransitSystem {
 		String busID = input.nextLine();
 		
 		int completed = stmt.executeUpdate("UPDATE TripOffering "
-				+ "SET BusID = \'" + busID + "\' WHERE TripNumber = " 
-				+ tripNumber + " AND Date = " + date + " AND ScheduledStartTime = "
+				+ "SET BusID = '" + busID + "' WHERE TripNumber = " 
+				+ tripNumber + " AND Date = #" + date + "# AND ScheduledStartTime = "
 				+ startTime);
+		
 		if(completed == 1) {
 			System.out.println("Successfully updated bus.\n");
 		}
 		else {
 			System.out.println("Trip does not exist.\n");
 		}
+		input.close();
 	}
 	
 	public static void displayStops(Statement stmt) throws SQLException {
@@ -195,7 +201,8 @@ public class PomonaTransitSystem {
 		String driverTelephoneNumber = input.nextLine();
 		
 		stmt.execute("INSERT INTO Driver VALUES "
-				+ "(\'" + driverName + "\', \'" + driverTelephoneNumber + "\')");
+				+ "('" + driverName + "', '" + driverTelephoneNumber + "')");
+		input.close();
 	}
 	
 	public static void addBus(Statement stmt) throws SQLException {
@@ -206,7 +213,48 @@ public class PomonaTransitSystem {
 		
 	}
 	
-	
+	public static void fillTables(Statement stmt) throws SQLException {
+
+		// ADD Trip (TripNumber, StartLocation, DestinationName)
+		stmt.execute("INSERT INTO Trip VALUES "
+				+ "('10', 'Temple Ave', 'Sunset Blvd')");
+		
+		// ADD TripOffering (TripNumber, Date, ScheduledStartTime, ScheduledArrivalTime,
+		//                   DriverName, BusID)
+		stmt.execute("INSERT INTO TripOffering VALUES "
+				+ "('10', #05/1/2019#, '1500', '1530', 'Jon', '999')");
+		
+		// ADD Bus ENTRIES (BusID, Model, Year)
+		stmt.execute("INSERT INTO Bus VALUES "
+				+ "('999', 'Minibus', '2008')");
+		
+		//	ADD Driver ENTRIES (DriverName, DriverTelephoneNumbe)
+		stmt.execute("INSERT INTO Driver VALUES "
+				+ "('Jon', '9091234567')");
+		stmt.execute("INSERT INTO Driver VALUES "
+				+ "('Tyrion', '1234567890')");
+		stmt.execute("INSERT INTO Driver VALUES "
+				+ "('Drogon', '9876543210')");
+		
+		// ADD Stop ENTRIES (StopNumber, StopAddress)
+		stmt.execute("INSERT INTO Stop VALUES "
+				+ "('100', 'Temple Ave')");
+		stmt.execute("INSERT INTO Stop VALUES "
+				+ "('105', 'Kellogg St')");
+		stmt.execute("INSERT INTO Stop VALUES "
+				+ "('110', 'Sunset Blvd')");
+		
+		//	ADD ActualTripStopInfo ENTRIES
+		// (TripNumber, Date, ScheduledStartTime, StopNumber, ScheduledArrivalTime, ActualStartTime,
+		//  ActualArrivalTime, NumberOfPassengerIn, NumberOfPassengerOut)
+		stmt.execute("INSERT INTO ActualTripStopInfo VALUES "
+				+ "('10', #5/1/2019#, 0800, 100, 0830, 0800, 0835,"
+				+ "10, 5)");
+		
+		// ADD TripStopInfo ENTRIES (TripNumber, StopNumber, SequenceNumber, DrivingTime)
+		stmt.execute("INSERT INTO TripStopInfo VALUES "
+				+ "('10', '100', '2', 100)");
+	}
 	
 	public static void createTables(Statement stmt) throws SQLException {
 		
@@ -220,7 +268,7 @@ public class PomonaTransitSystem {
 		
 		tableQuery = "CREATE TABLE TripOffering "
 				+ "( TripNumber CHAR(6) NOT NULL, "
-				+ "Date INTEGER NOT NULL, "
+				+ "Date DATE NOT NULL, "
 				+ "ScheduledStartTime INTEGER NOT NULL, "
 				+ "ScheduledArrivalTime INTEGER NOT NULL, "
 				+ "DriverName VARCHAR(50) NOT NULL, "
@@ -239,7 +287,7 @@ public class PomonaTransitSystem {
 		
 		tableQuery = "CREATE TABLE Driver "
 				+ "(DriverName VARCHAR(50) NOT NULL, "
-				+ "DriverTelephoneNumber CHAR(9) NOT NULL, "
+				+ "DriverTelephoneNumber CHAR(10) NOT NULL, "
 				+ "PRIMARY KEY ( DriverName ) "
 				+ ")";
 		stmt.execute(tableQuery);
@@ -253,7 +301,7 @@ public class PomonaTransitSystem {
 		
 		tableQuery = "CREATE TABLE ActualTripStopInfo "
 				+ "(TripNumber CHAR(6) NOT NULL, "
-				+ "DATE INTEGER NOT NULL, "
+				+ "DATE DATE NOT NULL, "
 				+ "ScheduledStartTime INTEGER NOT NULL, "
 				+ "StopNumber CHAR(6) NOT NULL, "
 				+ "ScheduledArrivalTime INTEGER NOT NULL, "
@@ -269,7 +317,7 @@ public class PomonaTransitSystem {
 				+ "(TripNumber CHAR(6) NOT NULL, "
 				+ "StopNumber CHAR(6) NOT NULL, "
 				+ "SequenceNumber INTEGER NOT NULL, "
-				+ "DrivingTime VARCHAR(50) NOT NULL, "
+				+ "DrivingTime INTEGER NOT NULL, "
 				+ "PRIMARY KEY ( TripNumber, StopNumber ) "
 				+ ")";
 		stmt.execute(tableQuery);
