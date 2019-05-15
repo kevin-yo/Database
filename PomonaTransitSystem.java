@@ -1,11 +1,10 @@
 import java.sql.Connection;
 import java.sql.DriverManager;
+import java.sql.ResultSet;
+import java.sql.ResultSetMetaData;
 import java.sql.SQLException;
 import java.sql.Statement;
 import java.util.Scanner;
-import java.sql.ResultSet;
-import java.sql.ResultSetMetaData;
-
 
 public class PomonaTransitSystem {
 
@@ -19,12 +18,12 @@ public class PomonaTransitSystem {
 			Statement stmt = conn.createStatement();
 			
 //			createTables(stmt); // only run this on first run to create tables, comment out after
+//			fillTables(stmt);
 			run(stmt);
 			
 			stmt.close();
 			conn.close();
 		}
-		
 		catch(Exception err)
 		{
 			System.out.println(err);
@@ -34,7 +33,7 @@ public class PomonaTransitSystem {
 	}
 	
 	public static void run(Statement stmt) throws SQLException {
-		String options = "[1] Display Trip Schedule"
+		String options = "[1] Display Trip Schedule\n"
 				+ "[2] Delete Trip \n"
 				+ "[3] Add Trip \n"
 				+ "[4] Change driver of a trip \n"
@@ -44,7 +43,7 @@ public class PomonaTransitSystem {
 				+ "[8] Add driver \n"
 				+ "[9] Add bus \n"
 				+ "[10] Delete bus \n"
-				+ "[11] Record actual data of trip"
+				+ "[11] Record actual data of trip\n"
 				+ ": ";
 		
 		Scanner input = new Scanner(System.in);
@@ -109,13 +108,13 @@ public class PomonaTransitSystem {
 		System.out.print("Enter Date: ");
 		String Date = input.nextLine();
 		
-		ResultSet rs = stmt.executeQuery("SELECT TO.ScheduledStartTime, TO.ScheduledArrivalTime, TO.DriverName, TO.BusID"
-										+ "FROM TripOffering TO, Trip T"
-										+ "WHERE T.TripNumber = TO.TripNumber AND "
-												+ "T.StartLocationName LIKE '" + StartLocationName + "' AND "
-												+ "T.DestinationName LIKE '" + DestinationName + "' AND "
-												+ "TO.Date = '" + Date + "' AND "
-												+ "ORDER BY ScheduledStartTime;");
+		ResultSet rs = stmt.executeQuery("SELECT TripOffering.ScheduledStartTime, TripOffering.ScheduledArrivalTime, TripOffering.DriverName, TripOffering.BusID "
+										+ "FROM TripOffering, Trip "
+										+ "WHERE Trip.TripNumber = TripOffering.TripNumber AND "
+												+ "Trip.StartLocationName LIKE '" + StartLocationName + "' AND "
+												+ "Trip.DestinationName LIKE '" + DestinationName + "' AND "
+												+ "TripOffering.Date = #" + Date + "# "
+												+ "ORDER BY TripOffering.ScheduledStartTime;");
 		ResultSetMetaData rsmd = rs.getMetaData();
 		int numOfCol = rsmd.getColumnCount();
 		
@@ -123,13 +122,13 @@ public class PomonaTransitSystem {
 		for(int i = 1; i <= numOfCol; i++) {
 			System.out.printf(format, rsmd.getColumnName(i));
 		}
-		
+		System.out.println();
 		while(rs.next()) {
 			for(int i = 1; i <= numOfCol; i++) {
 				System.out.printf(format, rs.getString(i));
 			}
 		}
-		
+		System.out.println("\n");
 		rs.close();
 	}
 	
@@ -143,7 +142,7 @@ public class PomonaTransitSystem {
 		String startTime = input.nextLine();
 		
 		int completed = stmt.executeUpdate("DELETE FROM TripOffering WHERE TripNumber = " + tripNumber + 
-				" AND Date = " + date + " AND ScheduledStartTime = " + 
+				" AND Date = #" + date + "# AND ScheduledStartTime = " + 
 				startTime + "");
 		if(completed == 1) {
 			System.out.println("Record removed from table.\n");
@@ -169,9 +168,9 @@ public class PomonaTransitSystem {
 		String busID = input.nextLine();
 		
 		stmt.execute("INSERT INTO TripOffering VALUES "
-				+ "(\'" + tripNumber + "\', \'" + date + "\', \'" + startTime +
-				"\', \'" + arrivalTime + "\', \'" + driverName + "\', \'" + busID
-				+ "\')");
+				+ "('" + tripNumber + "', #" + date + "#, '" + startTime +
+				"', '" + arrivalTime + "', '" + driverName + "', '" + busID
+				+ "')");
 	}
 	
 	public static void changeDriver(Statement stmt) throws SQLException {
@@ -186,8 +185,8 @@ public class PomonaTransitSystem {
 		String driverName = input.nextLine();
 		
 		int completed = stmt.executeUpdate("UPDATE TripOffering "
-				+ "SET DriverName = \'" + driverName + "\' WHERE TripNumber = " 
-				+ tripNumber + " AND Date = " + date + " AND ScheduledStartTime = "
+				+ "SET DriverName = '" + driverName + "' WHERE TripNumber = " 
+				+ tripNumber + " AND Date = #" + date + "# AND ScheduledStartTime = "
 				+ startTime);
 		if(completed == 1) {
 			System.out.println("Successfully updated name.\n");
@@ -195,7 +194,6 @@ public class PomonaTransitSystem {
 		else {
 			System.out.println("Trip does not exist.\n");
 		}
-
 	}
 	
 	public static void changeBus(Statement stmt) throws SQLException {
@@ -210,16 +208,16 @@ public class PomonaTransitSystem {
 		String busID = input.nextLine();
 		
 		int completed = stmt.executeUpdate("UPDATE TripOffering "
-				+ "SET BusID = \'" + busID + "\' WHERE TripNumber = " 
-				+ tripNumber + " AND Date = " + date + " AND ScheduledStartTime = "
+				+ "SET BusID = '" + busID + "' WHERE TripNumber = " 
+				+ tripNumber + " AND Date = #" + date + "# AND ScheduledStartTime = "
 				+ startTime);
+		
 		if(completed == 1) {
 			System.out.println("Successfully updated bus.\n");
 		}
 		else {
 			System.out.println("Trip does not exist.\n");
 		}
-
 	}
 	
 	public static void displayStops(Statement stmt) throws SQLException {
@@ -227,9 +225,9 @@ public class PomonaTransitSystem {
 		System.out.print("Enter TripNumber: ");
 		String tripNumber = input.nextLine();
 		
-		ResultSet rs = stmt.executeQuery("SELECT TSI.TripNumber, TSI.StopNumber, TSI.SequenceNumber, TSI.DrivingTime "
-				+ "FROM TripStopInfo TSI "
-				+ "WHERE TripNumber = " + tripNumber);
+		ResultSet rs = stmt.executeQuery("SELECT TripNumber, StopNumber, SequenceNumber, DrivingTime "
+				+ "FROM TripStopInfo "
+				+ "WHERE TripNumber = '" + tripNumber+"'");
 
 		ResultSetMetaData rsmd = rs.getMetaData();
 		int numOfCol = rsmd.getColumnCount();
@@ -238,15 +236,15 @@ public class PomonaTransitSystem {
 		for(int i = 1; i <= numOfCol; i++) {
 			System.out.printf(format, rsmd.getColumnName(i));
 		}
-
+		System.out.println();
 		while(rs.next()) {
 			for(int i = 1; i <= numOfCol; i++) {
 				System.out.printf(format, rs.getString(i));
 			}
 		}
+		System.out.println("\n");
 
-rs.close();
-		
+		rs.close();
 	}
 	
 	public static void displayWeeklySchedule(Statement stmt) throws SQLException {
@@ -261,7 +259,7 @@ rs.close();
 		String driverTelephoneNumber = input.nextLine();
 		
 		stmt.execute("INSERT INTO Driver VALUES "
-				+ "(\'" + driverName + "\', \'" + driverTelephoneNumber + "\')");
+				+ "('" + driverName + "', '" + driverTelephoneNumber + "')");
 	}
 	
 	public static void addBus(Statement stmt) throws SQLException {
@@ -273,8 +271,8 @@ rs.close();
 		System.out.print("Enter Year: ");
 		String year = input.nextLine();
 		
-		stmt.execute("INSERT INTO Driver VALUES " 
-					+ "(\'" + busID + "\', \'" + model + "\', \'" + year +"\')");
+		stmt.execute("INSERT INTO Bus VALUES " 
+					+ "('" + busID + "', '" + model + "', '" + year +"')");
 	}
 	
 	public static void deleteBus(Statement stmt) throws SQLException {
@@ -287,9 +285,9 @@ rs.close();
 		String year = input.nextLine();
 	
 		int completed = stmt.executeUpdate("DELETE FROM BUS " 
-										+ "WHERE BusID = " + busID + " AND "
-										+ "Model = " + model + " AND "
-										+ "Year = " + year + "");
+										+ "WHERE BusID = '" + busID + "' AND "
+										+ "Model = '" + model + "' AND "
+										+ "Year = '" + year + "'");
 		
 		if(completed == 1) {
 			System.out.println("Record removed from table.\n");
@@ -300,10 +298,52 @@ rs.close();
 		}
 	}
 	
-	public static void recordActualTripData(Statement stmt) throws SQLException{
+public static void recordActualTripData(Statement stmt) throws SQLException {
 		
 	}
+	
+	public static void fillTables(Statement stmt) throws SQLException {
+
+		// ADD Trip (TripNumber, StartLocation, DestinationName)
+		stmt.execute("INSERT INTO Trip VALUES "
+				+ "('10', 'Temple Ave', 'Sunset Blvd')");
 		
+		// ADD TripOffering (TripNumber, Date, ScheduledStartTime, ScheduledArrivalTime,
+		//                   DriverName, BusID)
+		stmt.execute("INSERT INTO TripOffering VALUES "
+				+ "('10', #05/1/2019#, '1500', '1530', 'Jon', '999')");
+		
+		// ADD Bus ENTRIES (BusID, Model, Year)
+		stmt.execute("INSERT INTO Bus VALUES "
+				+ "('999', 'Minibus', '2008')");
+		
+		//	ADD Driver ENTRIES (DriverName, DriverTelephoneNumbe)
+		stmt.execute("INSERT INTO Driver VALUES "
+				+ "('Jon', '9091234567')");
+		stmt.execute("INSERT INTO Driver VALUES "
+				+ "('Tyrion', '1234567890')");
+		stmt.execute("INSERT INTO Driver VALUES "
+				+ "('Drogon', '9876543210')");
+		
+		// ADD Stop ENTRIES (StopNumber, StopAddress)
+		stmt.execute("INSERT INTO Stop VALUES "
+				+ "('100', 'Temple Ave')");
+		stmt.execute("INSERT INTO Stop VALUES "
+				+ "('105', 'Kellogg St')");
+		stmt.execute("INSERT INTO Stop VALUES "
+				+ "('110', 'Sunset Blvd')");
+		
+		//	ADD ActualTripStopInfo ENTRIES
+		// (TripNumber, Date, ScheduledStartTime, StopNumber, ScheduledArrivalTime, ActualStartTime,
+		//  ActualArrivalTime, NumberOfPassengerIn, NumberOfPassengerOut)
+		stmt.execute("INSERT INTO ActualTripStopInfo VALUES "
+				+ "('10', #5/1/2019#, 0800, 100, 0830, 0800, 0835,"
+				+ "10, 5)");
+		
+		// ADD TripStopInfo ENTRIES (TripNumber, StopNumber, SequenceNumber, DrivingTime)
+		stmt.execute("INSERT INTO TripStopInfo VALUES "
+				+ "('10', '100', '2', 100)");
+	}
 	
 	public static void createTables(Statement stmt) throws SQLException {
 		
@@ -317,9 +357,9 @@ rs.close();
 		
 		tableQuery = "CREATE TABLE TripOffering "
 				+ "( TripNumber CHAR(6) NOT NULL, "
-				+ "Date VARCHAR(50) NOT NULL, "
-				+ "ScheduledStartTime VARCHAR(50) NOT NULL, "
-				+ "ScheduledArrivalTime VARCHAR(50) NOT NULL, "
+				+ "Date DATE NOT NULL, "
+				+ "ScheduledStartTime INTEGER NOT NULL, "
+				+ "ScheduledArrivalTime INTEGER NOT NULL, "
 				+ "DriverName VARCHAR(50) NOT NULL, "
 				+ "BusID CHAR(6) NOT NULL, "
 				+ "PRIMARY KEY ( TripNumber, Date, ScheduledStartTime ) "
@@ -336,7 +376,7 @@ rs.close();
 		
 		tableQuery = "CREATE TABLE Driver "
 				+ "(DriverName VARCHAR(50) NOT NULL, "
-				+ "DriverTelephoneNumber CHAR(9) NOT NULL, "
+				+ "DriverTelephoneNumber CHAR(10) NOT NULL, "
 				+ "PRIMARY KEY ( DriverName ) "
 				+ ")";
 		stmt.execute(tableQuery);
@@ -350,12 +390,12 @@ rs.close();
 		
 		tableQuery = "CREATE TABLE ActualTripStopInfo "
 				+ "(TripNumber CHAR(6) NOT NULL, "
-				+ "DATE VARCHAR(50) NOT NULL, "
-				+ "ScheduledStartTime VARCHAR(50) NOT NULL, "
+				+ "DATE DATE NOT NULL, "
+				+ "ScheduledStartTime INTEGER NOT NULL, "
 				+ "StopNumber CHAR(6) NOT NULL, "
-				+ "ScheduledArrivalTime VARCHAR(50) NOT NULL, "
-				+ "ActualStartTime VARCHAR(50) NOT NULL, "
-				+ "ActualArrivalTime VARCHAR(50) NOT NULL, "
+				+ "ScheduledArrivalTime INTEGER NOT NULL, "
+				+ "ActualStartTime INTEGER NOT NULL, "
+				+ "ActualArrivalTime INTEGER NOT NULL, "
 				+ "NumberOfPassengerIn INTEGER NOT NULL, "
 				+ "NumberOfPassengerOut INTEGER NOT NULL, "
 				+ "PRIMARY KEY ( TripNumber, Date, ScheduledStartTime, StopNumber ) "
@@ -366,7 +406,7 @@ rs.close();
 				+ "(TripNumber CHAR(6) NOT NULL, "
 				+ "StopNumber CHAR(6) NOT NULL, "
 				+ "SequenceNumber INTEGER NOT NULL, "
-				+ "DrivingTime VARCHAR(50) NOT NULL, "
+				+ "DrivingTime INTEGER NOT NULL, "
 				+ "PRIMARY KEY ( TripNumber, StopNumber ) "
 				+ ")";
 		stmt.execute(tableQuery);
