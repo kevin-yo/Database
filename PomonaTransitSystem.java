@@ -3,7 +3,6 @@
  * Project: Lab 4
  * Date: May 16, 2019
  */
-
 import java.sql.Connection;
 import java.sql.DriverManager;
 import java.sql.ResultSet;
@@ -17,14 +16,12 @@ import java.util.Scanner;
 public class PomonaTransitSystem {
 
 	public static void main(String[] args) {
-		
 		try {
 			Connection conn = DriverManager.getConnection("jdbc:ucanaccess://C:\\Users\\Kevin\\Documents\\database\\PomonaTransitSystem.mdb");
 			Statement stmt = conn.createStatement();
-//			createTables(stmt); // only run this on first run to create tables, comment out after
-//			fillTables(stmt);
+			createTables(stmt);
+			fillTables(stmt);
 			run(stmt);
-			
 			stmt.close();
 			conn.close();
 		}
@@ -429,7 +426,6 @@ public class PomonaTransitSystem {
 	}
 	
 	public static void createTables(Statement stmt) throws SQLException {
-		
 		String tableQuery = "CREATE TABLE Trip "
 				+ "( TripNumber CHAR(6) NOT NULL, "
 				+ "StartLocationName VARCHAR(50) NOT NULL, "
@@ -493,7 +489,5 @@ public class PomonaTransitSystem {
 				+ "PRIMARY KEY ( TripNumber, StopNumber ) "
 				+ ")";
 		stmt.execute(tableQuery);
-		
 	}
-
 }
