@@ -4,6 +4,8 @@ import java.sql.ResultSet;
 import java.sql.ResultSetMetaData;
 import java.sql.SQLException;
 import java.sql.Statement;
+import java.text.ParseException;
+import java.text.SimpleDateFormat;
 import java.util.Scanner;
 
 public class PomonaTransitSystem {
@@ -32,7 +34,7 @@ public class PomonaTransitSystem {
 		
 	}
 	
-	public static void run(Statement stmt) throws SQLException {
+	public static void run(Statement stmt) throws SQLException, ParseException {
 		String options = "[1] Display Trip Schedule\n"
 				+ "[2] Delete Trip \n"
 				+ "[3] Add Trip \n"
@@ -152,12 +154,15 @@ public class PomonaTransitSystem {
 		}
 	}
 	
-	public static void addTripOffering(Statement stmt) throws SQLException {
+	public static void addTripOffering(Statement stmt) throws SQLException, ParseException {
 		Scanner input = new Scanner(System.in);
+		SimpleDateFormat df = new SimpleDateFormat("MM/dd/yyy");
 		System.out.print("Enter Trip#: ");
 		String tripNumber = input.nextLine();
 		System.out.print("Enter Date: ");
-		String date = input.nextLine();
+		String inputDate = input.nextLine();
+		java.util.Date date = df.parse(inputDate);
+        java.sql.Date sqlDate = new java.sql.Date(date.getTime());
 		System.out.print("Enter ScheduledStartTime: ");
 		String startTime = input.nextLine();
 		System.out.print("Enter ScheduledArrivalTime: ");
@@ -168,7 +173,7 @@ public class PomonaTransitSystem {
 		String busID = input.nextLine();
 		
 		stmt.execute("INSERT INTO TripOffering VALUES "
-				+ "('" + tripNumber + "', #" + date + "#, '" + startTime +
+				+ "('" + tripNumber + "', #" + sqlDate + "#, '" + startTime +
 				"', '" + arrivalTime + "', '" + driverName + "', '" + busID
 				+ "')");
 	}
@@ -247,19 +252,22 @@ public class PomonaTransitSystem {
 		rs.close();
 	}
 	
-	public static void displayWeeklySchedule(Statement stmt) throws SQLException {
-		
+	public static void displayWeeklySchedule(Statement stmt) throws SQLException, ParseException {
+
+		SimpleDateFormat df = new SimpleDateFormat("MM/dd/yyy");
 		Scanner input = new Scanner(System.in);
 		System.out.print("Enter DriverName: ");
 		String driverName = input.nextLine();
 		System.out.print("Enter Date: ");
-		String date = input.nextLine();
+		String inputDate = input.nextLine();
+		java.util.Date date = df.parse(inputDate);
+        java.sql.Date sqlDate = new java.sql.Date(date.getTime());
 		
 		ResultSet rs = stmt.executeQuery("SELECT TripOffering.TripNumber, TripOffering.Date, TripOffering.ScheduledStartTime, TripOffering.ScheduledArrivalTime, TripOffering.BusID "
-						+ "FROM TripOffering, Driver "
-						+ "WHERE Driver.DriverName = '" + driverName + "' AND "
-						+ "TripOffering.DriverName = Driver.DriverName AND "
-						+ "TripOffering.Date < DATEADD(DD, 7, @TripOffering.Date)");
+										+ "FROM TripOffering, Driver "
+										+ "WHERE Driver.DriverName = '" + driverName + "' AND "
+										+ "TripOffering.DriverName = '" + driverName + "' AND "
+										+ "TripOffering.Date < DATEADD('d', 7, #" + sqlDate +"#)");
 		
 		ResultSetMetaData rsmd = rs.getMetaData();
 		int numOfCol = rsmd.getColumnCount();
@@ -276,7 +284,6 @@ public class PomonaTransitSystem {
 		}
 		System.out.println("\n");
 		rs.close();
-
 	}
 	
 	public static void addDriver(Statement stmt) throws SQLException {
@@ -354,7 +361,7 @@ public static void recordActualTripData(Statement stmt) throws SQLException {
 	
 	stmt.execute("INSERT INTO ActualTripInfo VALUES " 
 			+ "('" + tripNumber + "', '" + date + "', '" + scheduledStartTime + "', '" + stopNumber + "', '" + scheduledArrivalTime 
-			+ "', '" + actualStartTime + "', '" + actualArrivalTime + "', \'" + numOfPassIN + "', '" + numOfPassOUT + "')");
+			+ "', '" + actualStartTime + "', '" + actualArrivalTime + "', '" + numOfPassIN + "', '" + numOfPassOUT + "')");
 	}
 	
 	public static void fillTables(Statement stmt) throws SQLException {
